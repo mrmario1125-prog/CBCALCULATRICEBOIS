@@ -1,0 +1,25 @@
+CALCULADORA DE MADERA — V3.2.1 — RESALTADO NEÓN DEL PRODUCTOR
+
+Esta versión parte del ZIP V3.1 probado por el usuario y conserva sus funciones acumuladas y el flujo de datos existente:
+- Tablas Supabase: camiones, productores y depositos.
+- Calculadora por largos 8, 10, 12 y 16 pies y anchos 7.7, 7.8 y 7.9.
+- Varios productores por camión, procedencia y precio informativo de transporte.
+- Historial compartido, edición de camiones existentes y desglose por productor/deposito.
+- Reporte y exportación Excel en español, inglés y francés según el idioma seleccionado.
+- Manejo de respuestas vacías de Supabase.
+- Corrección: el aviso de nuevo camión consulta el estado de cambios en memoria y el borrador local para detectar datos sin guardar; al cancelar, conserva los datos; al confirmar, limpia los campos y conserva el historial.
+- Corrección reforzada: el botón del productor activo tiene resaltado verde, borde, brillo, marca ✓ y atributo accesible aria-pressed; el estado visual se actualiza al cambiar de productor.
+- Etiquetas visibles simplificadas a “Productor” en español, inglés y francés.
+- Desglose del historial en filas independientes por largo, mostrando únicamente los largos utilizados.
+- Rediseño visual industrial oscuro con verde, tarjetas mejoradas, controles grandes y adaptación móvil/escritorio.
+- Caché de service worker incrementada a v8 para evitar conservar el CSS anterior.
+
+IMPORTANTE:
+- Esta versión no ha sido probada contra el proyecto real de Supabase desde este entorno.
+- No subir a Netlify hasta probar en el dispositivo: guardar un camión, actualizar historial, editarlo y exportar Excel.
+- No se ha modificado ni ejecutado ninguna operación en la base de datos.
+
+V3.2 correcciones basadas en la auditoría manual: aviso de datos sin guardar y resaltado inequívoco del productor activo. El service worker se incrementó a v10 para evitar servir el caché previo. Las correcciones aún deben probarse localmente antes de publicar.
+
+
+V3.2.1: se corrigió el contenedor de botones para usar la clase producer-tabs y se añadió estilo CSS de alta prioridad para que solo el productor activo tenga fondo verde neón, borde luminoso intenso, halo exterior y marca ✓. Los botones no seleccionados quedan oscuros. Pendiente de validación visual del usuario.
