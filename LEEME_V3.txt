@@ -23,3 +23,15 @@ V3.2 correcciones basadas en la auditoría manual: aviso de datos sin guardar y 
 
 
 V3.2.1: se corrigió el contenedor de botones para usar la clase producer-tabs y se añadió estilo CSS de alta prioridad para que solo el productor activo tenga fondo verde neón, borde luminoso intenso, halo exterior y marca ✓. Los botones no seleccionados quedan oscuros. Pendiente de validación visual del usuario.
+
+MEJORA 1 - PROCEDENCIA (borrador de prueba)
+- El campo Procedencia ahora admite sugerencias de nombres municipales oficiales en francés.
+- La lista se intenta cargar desde el CSV del Répertoire des municipalités del Ministère des Affaires municipales et de l’Habitation, difundido por Données Québec.
+- Se conserva la escritura libre: se puede introducir cualquier texto aunque la lista no cargue o el lugar no aparezca.
+- La procedencia sigue guardándose como texto en el mismo campo de Supabase; no se modificó la estructura de la base de datos.
+- Se incrementó la versión de caché del service worker a v11 para que los dispositivos reciban la nueva interfaz.
+- Pendiente: probar en navegador real que el servidor CSV permita solicitudes CORS desde el dominio de la aplicación y verificar las sugerencias en Android/iPad.
+\n\nMEJORA 1 - BUSCADOR INTELIGENTE DE PROCEDENCIA\n- Busca municipios aunque se omitan acentos, mayúsculas, guiones o espacios.\n- Trata Saint, Sainte, St y Ste como variantes equivalentes para la búsqueda.\n- Las sugerencias muestran siempre el nombre oficial del municipio.\n- Se puede escribir una procedencia manualmente aunque no aparezca en las sugerencias.\n
+
+VERSION INTEGRADA CANDIDATA
+Incluye: buscador inteligente de procedencia; selector de ancho 7.7/7.8/7.9/MANUAL; catálogo local de 987 productores; etiquetas CORDES 8/10/12/16; precio de transporte guardado como texto informativo. Esta versión debe probarse antes de publicarse.
