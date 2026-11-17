@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calculadora-madera-v3-3-neon-name';
+const CACHE_NAME = 'calculadora-madera-v3-3-bono-ref-nav-prueba1';
 const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 const APP_CACHE_PREFIX = 'calculadora-madera-';
 
