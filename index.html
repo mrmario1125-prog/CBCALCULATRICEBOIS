@@ -317,7 +317,35 @@ function numberRows(rows){const sorted=[...rows].sort((a,b)=>new Date(a.created_
 function metaOf(arr){return arr.find(d=>d&&(d.productor!==undefined||d.procedencia!==undefined||d.transportista!==undefined))||{}}
 function grouped(arr){const map=new Map();arr.forEach(d=>{const key=String(d.producer_index||1)+'|'+(d.productor||'');if(!map.has(key))map.set(key,{name:d.productor||'',reference:d.referencia||'',origin:d.procedencia||'',price:d.precio_transporte||'',carrier:d.transportista||'',deposits:[]});map.get(key).deposits.push(d)});return [...map.values()]}
 async function rest(path,options={}){const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...options,headers:{...apiHeaders(),...(options.headers||{})}});if(!r.ok)throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,220));if(r.status===204)return [];const body=await r.text();if(!body||!body.trim())return [];try{return JSON.parse(body)}catch(e){throw new Error('Supabase devolvió una respuesta que no es JSON válido: '+body.slice(0,180))}}
-async function fetchAllRecords(){const trucks=await rest('camiones?select=id,created_at,transportista,ancho,total_cordes&order=created_at.desc&limit=1000');if(!trucks.length)return [];const truckIds=trucks.map(t=>t.id);const ps=await rest('productores?select=id,camion_id,nombre,referencia,procedencia,precio_transporte&camion_id=in.('+truckIds.join(',')+')');const producerIds=ps.map(p=>p.id);const ds=producerIds.length?await rest('depositos?select=id,productor_id,numero_deposito,largo_pies,altura&productor_id=in.('+producerIds.join(',')+')&order=numero_deposito.asc'):[];return trucks.map(t=>{const myPs=ps.filter(p=>String(p.camion_id)===String(t.id));const arr=[];myPs.forEach((p,pi)=>ds.filter(d=>String(d.productor_id)===String(p.id)).forEach(d=>arr.push({producer_index:pi+1,producer_id:p.id,deposit_id:d.id,transportista:t.transportista||'',productor:p.nombre||'',referencia:p.referencia||'',procedencia:p.procedencia||'',precio_transporte:p.precio_transporte==null?'':String(p.precio_transporte),length:Number(d.largo_pies),height:d.altura==null?null:Number(d.altura),numero_deposito:d.numero_deposito})));return {id:t.id,created_at:t.created_at,transportista:t.transportista||'',ancho:t.ancho,total_cordes:t.total_cordes,producers:myPs.map(p=>({id:p.id,name:p.nombre||'',reference:p.referencia||'',origin:p.procedencia||'',price:p.precio_transporte==null?'':String(p.precio_transporte),deposits:ds.filter(d=>String(d.productor_id)===String(p.id)).map(d=>({id:d.id,numero_deposito:d.numero_deposito,length:Number(d.largo_pies),height:d.altura==null?null:Number(d.altura)}))})),depositos:arr}})}
+async function restPaged(path,pageSize=500){
+ const all=[];let offset=0,total=null;
+ while(true){
+  const end=offset+pageSize-1;
+  const response=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers:{...apiHeaders(),'Range-Unit':'items','Range':offset+'-'+end,'Prefer':'count=exact'}});
+  if(!response.ok)throw new Error('HTTP '+response.status+' '+(await response.text()).slice(0,220));
+  const body=await response.text();const page=body&&body.trim()?JSON.parse(body):[];
+  if(!Array.isArray(page))throw new Error('Supabase devolvió un resultado inesperado al paginar.');
+  all.push(...page);
+  const range=response.headers.get('content-range');
+  if(range){const parts=range.split('/'),bounds=parts[0].split('-');if(bounds.length===2&&bounds[1]!=='*'){offset=Number(bounds[1])+1;if(parts[1]&&parts[1]!=='*')total=Number(parts[1]);}else offset+=page.length;}
+  else offset+=page.length;
+  if(page.length===0||(total!==null?offset>=total:page.length<pageSize))break;
+ }
+ return all;
+}
+async function fetchAllRecords(){
+ const trucks=await restPaged('camiones?select=id,created_at,transportista,ancho,total_cordes&order=created_at.desc');
+ if(!trucks.length)return [];
+ const truckIds=trucks.map(t=>t.id);
+ const ps=await restPaged('productores?select=id,camion_id,nombre,referencia,procedencia,precio_transporte&camion_id=in.('+truckIds.join(',')+')&order=id.asc');
+ const producerIds=ps.map(p=>p.id);
+ const ds=producerIds.length?await restPaged('depositos?select=id,productor_id,numero_deposito,largo_pies,altura&productor_id=in.('+producerIds.join(',')+')&order=numero_deposito.asc,id.asc'):[];
+ return trucks.map(t=>{
+  const myPs=ps.filter(p=>String(p.camion_id)===String(t.id));const arr=[];
+  myPs.forEach((p,pi)=>ds.filter(d=>String(d.productor_id)===String(p.id)).forEach(d=>arr.push({producer_index:pi+1,producer_id:p.id,deposit_id:d.id,transportista:t.transportista||'',productor:p.nombre||'',referencia:p.referencia||'',procedencia:p.procedencia||'',precio_transporte:p.precio_transporte==null?'':String(p.precio_transporte),length:Number(d.largo_pies),height:d.altura==null?null:Number(d.altura),numero_deposito:d.numero_deposito})));
+  return {id:t.id,created_at:t.created_at,transportista:t.transportista||'',ancho:t.ancho,total_cordes:t.total_cordes,producers:myPs.map(p=>({id:p.id,name:p.nombre||'',reference:p.referencia||'',origin:p.procedencia||'',price:p.precio_transporte==null?'':String(p.precio_transporte),deposits:ds.filter(d=>String(d.productor_id)===String(p.id)).map(d=>({id:d.id,numero_deposito:d.numero_deposito,length:Number(d.largo_pies),height:d.altura==null?null:Number(d.altura)}))})),depositos:arr};
+ });
+}
 async function saveTruckToNewTables(){
  const validProducers=producers.filter(p=>p.name.trim());if(!validProducers.length)throw new Error(tr('statusNoProducer'));
  const total=Number(producers.reduce((s,p)=>s+producerTotal(p),0).toFixed(4));
